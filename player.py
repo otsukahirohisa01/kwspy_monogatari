@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 import time
+from time import sleep
 import json
 import eval7
 from websocket import create_connection
@@ -9,8 +10,10 @@ from websocket import create_connection
 ws = ""
 URL = "ws://jp-ai2018t.jp.trendnet.org:3001"
 PLAYER = "19211_user_A"
+#URL = "ws://JP-AI2018B.jp.trendnet.org:3001"
+#PLAYER = "hgxetayn"
 
-def takeAction(action, data):
+def takeAction(ws, action, data):
     if action == "__action":
         ws.send(json.dumps({
             "eventName": "__action",
@@ -31,7 +34,6 @@ def takeAction(action, data):
 
 def doListen():
     try:
-        global ws
         ws = create_connection(URL)
         ws.send(json.dumps({
             "eventName": "__join",
@@ -41,17 +43,22 @@ def doListen():
         }))
         while 1:
             result = ws.recv()
+            if (result == ""):
+                print("ws.recv() failed.")
+                break
             msg = json.loads(result)
             event_name = msg["eventName"]
             data = msg["data"]
             print(event_name)
             print(data)
-            takeAction(event_name, data)
-            #if event_name == "__game_over" or event_name == "__game_stop":
-            #    break
+            takeAction(ws, event_name, data)
+            if event_name == "__game_stop":
+                print("game stopped.")
+                break
+        ws.close()
     except Exception as e:
         print(e.args)
-        doListen()
+        ws.close()
 
 
 def maxsuitcount(cards):
@@ -77,4 +84,7 @@ def evaluate(cards):
     return (hand,score,type,suitcount,straight)
 
 if __name__ == '__main__':
-    doListen()
+    while 1:
+        doListen()
+        sleep(1)
+        print("retry doListen()")
