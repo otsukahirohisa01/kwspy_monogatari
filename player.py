@@ -4,6 +4,7 @@ import time
 from time import sleep
 import json
 import eval7
+import itertools
 from websocket import create_connection
 # pip install websocket-client
 
@@ -15,6 +16,10 @@ PLAYER = "19211_user_A"
 
 def takeAction(ws, action, data):
     if action == "__action":
+        hand,score,type,suitecount,straight = evaluate(data)
+        print("================")
+        print(hand,score,type,suitecount,straight)
+        print("================")
         ws.send(json.dumps({
             "eventName": "__action",
             "data": {
@@ -50,7 +55,7 @@ def doListen():
             event_name = msg["eventName"]
             data = msg["data"]
             print(event_name)
-            print(data)
+            #print(data)
             takeAction(ws, event_name, data)
             if event_name == "__game_stop":
                 print("game stopped.")
@@ -75,7 +80,11 @@ def canbe_straight(cards):
     return count
 
 
-def evaluate(cards):
+def evaluate(data):
+    if data["game"]["board"] is not None:
+        cards = data["self"]["cards"] + data["game"]["board"]
+    else:
+        cards = data["self"]["cards"]
     hand = [eval7.Card(x.capitalize()) for x in cards]
     score = eval7.evaluate(hand)
     type = eval7.hand_type(score)
