@@ -5,6 +5,7 @@ from time import sleep
 import json
 import eval7
 import itertools
+import inspect
 from websocket import create_connection
 # pip install websocket-client
 
@@ -16,26 +17,71 @@ PLAYER = "19211_user_A"
 
 def takeAction(ws, action, data):
     if action == "__action":
-        hand,score,type,suitecount,straight = evaluate(data)
-        print("================")
-        print(hand,score,type,suitecount,straight)
-        print("================")
-        ws.send(json.dumps({
-            "eventName": "__action",
-            "data": {
-                "action": "call",
-                "playerName": PLAYER
-            }
-        }))
+        ##
+        round = data["game"]["roundName"]
+        if round == "Deal":
+            takeActionForDeal(ws, action, data)
+        elif round == "Flop":
+            takeActionForFlop(ws, action, data)
+        elif round == "Turn":
+            takeActionForTurn(ws, action, data)
+        elif round == "River":
+            takeActionForRiver(ws, action, data)
+        else:
+            sendAction(ws, "call")
     elif action == "__bet":
         ws.send(json.dumps({
             "eventName": "__action",
             "data": {
                 "action": "bet",
                 "playerName": PLAYER,
-                "amount": 100
+                "amount": 10
             }
         }))
+
+def takeActionForDeal(ws, action, data):
+    print("=== Action for Deal ===")
+    hand,score,type,suitecount,straight = evaluate(data)
+    print(hand,score,type,suitecount,straight)
+    sendAction(ws, "call")
+
+def takeActionForFlop(ws, action, data):
+    print("=== Action for Flop ===")
+    hand,score,type,suitecount,straight = evaluate(data)
+    print(hand,score,type,suitecount,straight)
+    if type == "High Card":
+        # 現在役なしで、かつ次のroundでストレートにもならない場合は降りる
+        if straight == 0:
+            sendAction(ws, "fold")
+            return
+    sendAction(ws, "call")
+
+def takeActionForTurn(ws, action, data):
+    print("=== Action for Turn ===")
+    hand,score,type,suitecount,straight = evaluate(data)
+    print(hand,score,type,suitecount,straight)
+    if type == "High Card" or type == "Pair":
+        # 現在の役がPair以下で、かつ次のroundでストレートにもならない場合は降りる
+        if straight == 0:
+            sendAction(ws, fold)
+            return
+    sendAction(ws, "call")
+
+def takeActionForRiver(ws, action, data):
+    print("=== Action for River ===")
+    hand,score,type,suitecount,straight = evaluate(data)
+    print(hand,score,type,suitecount,straight)
+    sendAction(ws, "call")
+
+def sendAction(ws, action):
+    print("Send \"{0}\" action".format(action))
+    ws.send(json.dumps({
+        "eventName": "__action",
+        "data": {
+            "action": action,
+            "playerName": PLAYER
+        }
+    }))
 
 def doListen():
     try:
@@ -54,7 +100,7 @@ def doListen():
             msg = json.loads(result)
             event_name = msg["eventName"]
             data = msg["data"]
-            print(event_name)
+            #print(event_name)
             #print(data)
             takeAction(ws, event_name, data)
             if event_name == "__game_stop":
