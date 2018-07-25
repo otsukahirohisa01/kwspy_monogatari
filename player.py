@@ -63,7 +63,7 @@ def takeActionForTurn(ws, action, data):
     if type == "High Card" or type == "Pair":
         # 現在の役がPair以下で、かつ次のroundでストレートにもならない場合は降りる
         if straight == 0:
-            sendAction(ws, fold)
+            sendAction(ws, "fold")
             return
     sendAction(ws, "call")
 
