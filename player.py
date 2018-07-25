@@ -17,7 +17,7 @@ PLAYER = "19211_user_A"
 
 def takeAction(ws, action, data):
     if action == "__action":
-        ##
+        print("\n!!! __action !!!")
         round = data["game"]["roundName"]
         if round == "Deal":
             takeActionForDeal(ws, action, data)
@@ -30,14 +30,8 @@ def takeAction(ws, action, data):
         else:
             sendAction(ws, "call")
     elif action == "__bet":
-        ws.send(json.dumps({
-            "eventName": "__action",
-            "data": {
-                "action": "bet",
-                "playerName": PLAYER,
-                "amount": 10
-            }
-        }))
+        print("\n!!! __bet !!!")
+        sendAction(ws, "check")
 
 def takeActionForDeal(ws, action, data):
     print("=== Action for Deal ===")
