@@ -44,8 +44,11 @@ def takeActionForFlop(ws, action, data):
     hand,score,type,suitecount,straight = evaluate(data)
     print(hand,score,type,suitecount,straight)
     if type == "High Card":
-        # 現在役なしで、かつ次のroundでストレートにもならない場合は降りる
-        if straight == 0:
+        # 現在役なし
+        # かつ次のroundでストレートにならない
+        # かつ最終的にフラッシュになる可能性がない
+        # 場合は降りる
+        if straight == 0 or suitecount < 3:
             sendAction(ws, "fold")
             return
     sendAction(ws, "call")
@@ -55,16 +58,28 @@ def takeActionForTurn(ws, action, data):
     hand,score,type,suitecount,straight = evaluate(data)
     print(hand,score,type,suitecount,straight)
     if type == "High Card" or type == "Pair":
-        # 現在の役がPair以下で、かつ次のroundでストレートにもならない場合は降りる
-        if straight == 0:
+        # 現在の役がPair以下で、かつ次のroundでストレートにもフラッシュにもならない場合は降りる
+        if straight == 0 or suitecount < 4:
             sendAction(ws, "fold")
             return
+    # フルハウス以上の場合はraise
+    if type == "Full House" or type == "Quads" or type == "Straight Flush":
+        sendAction(ws, "raise")
+        return
     sendAction(ws, "call")
 
 def takeActionForRiver(ws, action, data):
     print("=== Action for River ===")
     hand,score,type,suitecount,straight = evaluate(data)
     print(hand,score,type,suitecount,straight)
+    # Pair以下の場合は降りる
+    if type == "High Card" or type == "Pair":
+        sendAction(ws, "fold")
+        return
+    # フルハウス以上の場合はraise
+    if type == "Full House" or type == "Quads" or type == "Straight Flush":
+        sendAction(ws, "raise")
+        return
     sendAction(ws, "call")
 
 def sendAction(ws, action):
