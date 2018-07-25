@@ -48,7 +48,7 @@ def takeActionForFlop(ws, action, data):
         # かつ次のroundでストレートにならない
         # かつ最終的にフラッシュになる可能性がない
         # 場合は降りる
-        if straight == 0 or suitecount < 3:
+        if straight < 1 and suitecount < 3:
             sendAction(ws, "fold")
             return
     sendAction(ws, "call")
@@ -59,7 +59,7 @@ def takeActionForTurn(ws, action, data):
     print(hand,score,type,suitecount,straight)
     if type == "High Card" or type == "Pair":
         # 現在の役がPair以下で、かつ次のroundでストレートにもフラッシュにもならない場合は降りる
-        if straight == 0 or suitecount < 4:
+        if straight < 1 and suitecount < 4:
             sendAction(ws, "fold")
             return
     # フルハウス以上の場合はraise
