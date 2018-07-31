@@ -11,14 +11,22 @@ from websocket import create_connection
 
 ws = ""
 URL = "ws://jp-ai2018t.jp.trendnet.org:3001"
-PLAYER = "19211_user_A"
+PLAYER = "19211_user_B"
 #URL = "ws://JP-AI2018B.jp.trendnet.org:3001"
 #PLAYER = "hgxetayn"
 
+anyone_allin = False
+
 def takeAction(ws, action, data):
+    global anyone_allin
     if action == "__action":
         print("\n!!! __action !!!")
         round = data["game"]["roundName"]
+        # 誰かがallinした場合は降りる
+        if anyone_allin == True:
+            sendAction(ws, "fold")
+            return
+        # Action for round
         if round == "Deal":
             takeActionForDeal(ws, action, data)
         elif round == "Flop":
@@ -32,6 +40,13 @@ def takeAction(ws, action, data):
     elif action == "__bet":
         print("\n!!! __bet !!!")
         sendAction(ws, "check")
+    elif action == "__show_action":
+        print(data["action"]["action"])
+        if data["action"]["action"] == "allin":
+            anyone_allin = True
+    elif action == "__new_round":
+        print("\nNew round. Reset all global flags...")
+        anyone_allin = False
 
 def takeActionForDeal(ws, action, data):
     print("=== Action for Deal ===")
@@ -109,7 +124,7 @@ def doListen():
             msg = json.loads(result)
             event_name = msg["eventName"]
             data = msg["data"]
-            #print(event_name)
+            print(event_name)
             #print(data)
             takeAction(ws, event_name, data)
             if event_name == "__game_stop":
