@@ -26,6 +26,11 @@ def takeAction(ws, action, data):
         if anyone_allin == True:
             sendAction(ws, "fold")
             return
+        hand,score,type,suitecount,straight = evaluate(data)
+        # Full House以上でallin
+        if type == "Full House" or type == "Quads" or type == "Straight Flush":
+            sendAction(ws, "allin")
+            return
         # Action for round
         if round == "Deal":
             takeActionForDeal(ws, action, data)
@@ -77,10 +82,6 @@ def takeActionForTurn(ws, action, data):
         if straight < 1 and suitecount < 4:
             sendAction(ws, "fold")
             return
-    # フルハウス以上の場合はraise
-    if type == "Full House" or type == "Quads" or type == "Straight Flush":
-        sendAction(ws, "raise")
-        return
     sendAction(ws, "call")
 
 def takeActionForRiver(ws, action, data):
@@ -90,10 +91,6 @@ def takeActionForRiver(ws, action, data):
     # Pair以下の場合は降りる
     if type == "High Card" or type == "Pair":
         sendAction(ws, "fold")
-        return
-    # フルハウス以上の場合はraise
-    if type == "Full House" or type == "Quads" or type == "Straight Flush":
-        sendAction(ws, "raise")
         return
     sendAction(ws, "call")
 
